@@ -353,8 +353,8 @@ function PairingDialogBase({
             type="button"
             onClick={onClose}
             className="p-1 text-text-tertiary hover:text-text-primary transition-colors"
-            title={tCommon("close")}
-            aria-label={tCommon("close")}
+            title={t("close")}
+            aria-label={t("close")}
           >
             <X size={16} />
           </button>
