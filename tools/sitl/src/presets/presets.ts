@@ -158,8 +158,7 @@ const PRESETS: BuildPreset[] = [
         BATT_N_CELLS: 6,
         GPS_TYPE: 1,
         COMPASS_USE: 1,
-        RNGFND1_TYPE: 20,    // Benewake TFmini
-        RNGFND1_MAX_CM: 1200,
+        RNGFND1_TYPE: 0,     // Disabled for SITL (real HW uses 20 = Benewake TFmini)
         MOT_SPIN_ARM: 0.05,
         MOT_SPIN_MIN: 0.10,
         MOT_SPIN_MAX: 0.95,
@@ -376,8 +375,7 @@ const PRESETS: BuildPreset[] = [
         BATT_N_CELLS: 6,
         GPS_TYPE: 1,
         COMPASS_USE: 1,
-        RNGFND1_TYPE: 20,    // Benewake TFmini
-        RNGFND1_MAX_CM: 1200,
+        RNGFND1_TYPE: 0,     // Disabled for SITL (real HW uses 20 = Benewake TFmini)
         MOT_SPIN_ARM: 0.08,
         MOT_SPIN_MIN: 0.12,
         MOT_SPIN_MAX: 0.95,
