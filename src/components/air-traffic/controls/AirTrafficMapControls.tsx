@@ -1,6 +1,6 @@
 /**
  * @module AirTrafficMapControls
- * @description Map controls for the Air Traffic 3D viewer: imagery mode toggle,
+ * @description Map controls for the Airspace 3D viewer: imagery mode toggle,
  * buildings checkbox, terrain exaggeration slider.
  * Reuses pattern from simulation/MapControlsPanel.
  * @license GPL-3.0-only
@@ -10,7 +10,6 @@
 
 import { useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useTrafficStore } from "@/stores/traffic-store";
 import { cn } from "@/lib/utils";
 
 interface AirTrafficMapControlsProps {
@@ -25,10 +24,6 @@ export function AirTrafficMapControls({ hasIonToken }: AirTrafficMapControlsProp
   const setBuildingsEnabled = useSettingsStore((s) => s.setCesiumBuildingsEnabled);
   const terrainExaggeration = useSettingsStore((s) => s.terrainExaggeration);
   const setTerrainExaggeration = useSettingsStore((s) => s.setTerrainExaggeration);
-  const dataSource = useTrafficStore((s) => s.dataSource);
-  const connectionQuality = useTrafficStore((s) => s.connectionQuality);
-
-  const satDisabled = !hasIonToken;
   const buildingsDisabled = !hasIonToken;
 
   return (
@@ -49,13 +44,11 @@ export function AirTrafficMapControls({ hasIonToken }: AirTrafficMapControlsProp
           Dark
         </button>
         <button
-          onClick={() => !satDisabled && setImageryMode("satellite")}
-          title={satDisabled ? t("requiresIonToken") : t("satelliteImagery")}
+          onClick={() => setImageryMode("satellite")}
+          title={t("satelliteImagery")}
           className={cn(
-            "h-7 rounded text-[10px] font-mono font-bold flex-1 transition-colors",
-            satDisabled && "opacity-50 cursor-not-allowed",
-            !satDisabled && "cursor-pointer",
-            imageryMode === "satellite" && !satDisabled
+            "h-7 rounded text-[10px] font-mono font-bold flex-1 transition-colors cursor-pointer",
+            imageryMode === "satellite"
               ? "bg-accent-primary text-bg-primary"
               : "text-text-secondary hover:text-text-primary border border-border-default"
           )}
@@ -107,16 +100,6 @@ export function AirTrafficMapControls({ hasIonToken }: AirTrafficMapControlsProp
         />
       </div>
 
-      {/* Data source + connection quality */}
-      <div className="flex items-center gap-1.5 pt-1 border-t border-border-default/50 mt-1">
-        <span className={cn(
-          "w-2 h-2 rounded-full shrink-0",
-          connectionQuality === "good" && "bg-green-400",
-          connectionQuality === "degraded" && "bg-yellow-400",
-          connectionQuality === "disconnected" && "bg-red-400",
-        )} />
-        <span className="text-[9px] font-mono text-text-tertiary truncate">{dataSource || "offline"}</span>
-      </div>
     </div>
   );
 }

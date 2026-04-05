@@ -10,21 +10,15 @@ crons.interval(
 );
 
 crons.interval(
-  "sync-adsb-cache",
-  { seconds: 60 },
-  internal.cmdAdsbCache.syncAdsb
-);
-
-crons.interval(
-  "sync-opensky-cache",
-  { minutes: 5 },
-  internal.cmdAdsbCache.syncOpenSky
-);
-
-crons.interval(
   "clean-expired-pairing",
   { minutes: 15 },
   api.cmdPairing.cleanExpiredRequests
+);
+
+crons.interval(
+  "sync-airspace-zones",
+  { hours: 24 },
+  internal.cmdAirspaceZones.syncAllZones
 );
 
 export default crons;

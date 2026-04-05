@@ -18,6 +18,8 @@ let mediaRecorder: MediaRecorder | null = null;
 let recordedChunks: Blob[] = [];
 let statsInterval: ReturnType<typeof setInterval> | null = null;
 let videoElement: HTMLVideoElement | null = null;
+let lastFrameTime: number = 0;
+const FRAME_TIMEOUT_MS = 8000;
 
 /**
  * Start a WebRTC stream from a WHEP endpoint.
@@ -27,13 +29,30 @@ let videoElement: HTMLVideoElement | null = null;
 export async function startStream(whepUrl: string): Promise<MediaStream> {
   const store = useVideoStore.getState();
 
+  // Clean up any stale connection before starting fresh
   if (pc) {
-    throw new Error("Stream already active — call stopStream() first");
+    try { pc.close(); } catch { /* noop */ }
+    pc = null;
+    stopStatsPolling();
   }
 
   pc = new RTCPeerConnection({
     iceServers: [], // Local network — no STUN/TURN needed
   });
+
+  // Monitor connection state — detect silent disconnections
+  pc.onconnectionstatechange = () => {
+    const state = pc?.connectionState;
+    if (state === "disconnected" || state === "failed" || state === "closed") {
+      console.warn("[webrtc-client] Connection state:", state);
+      const s = useVideoStore.getState();
+      s.setStreaming(false);
+      s.updateStats(0, 0);
+      stopStatsPolling();
+      // Don't close pc here — let stopStream() handle cleanup
+      // This just updates the UI state so it shows NO SIGNAL
+    }
+  };
 
   // Receive-only transceiver
   pc.addTransceiver("video", { direction: "recvonly" });
@@ -75,10 +94,10 @@ export async function startStream(whepUrl: string): Promise<MediaStream> {
   }
 
   const answerSdp = await response.text();
-  await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
 
-  // Wait for a track to arrive
-  const stream = await new Promise<MediaStream>((resolve, reject) => {
+  // Set ontrack BEFORE setRemoteDescription to avoid race condition
+  // (track events can fire during or immediately after setRemoteDescription)
+  const trackPromise = new Promise<MediaStream>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error("No video track received within 10 seconds"));
     }, 10000);
@@ -90,6 +109,10 @@ export async function startStream(whepUrl: string): Promise<MediaStream> {
       }
     };
   });
+
+  await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+
+  const stream = await trackPromise;
 
   store.setStreamUrl(whepUrl);
   store.setStreaming(true);
@@ -210,6 +233,8 @@ export function captureScreenshot(): string | null {
 function startStatsPolling(): void {
   if (statsInterval) return;
 
+  lastFrameTime = Date.now();
+
   statsInterval = setInterval(async () => {
     if (!pc) return;
 
@@ -225,6 +250,21 @@ function startStatsPolling(): void {
         const latencyMs =
           emitted > 0 ? Math.round((delay / emitted) * 1000) : 0;
         store.updateStats(fps, latencyMs);
+
+        // Track frame arrival for timeout detection
+        if (fps > 0) {
+          lastFrameTime = Date.now();
+        } else if (
+          Date.now() - lastFrameTime > FRAME_TIMEOUT_MS &&
+          pc?.connectionState === "connected"
+        ) {
+          // Frames stopped arriving but WebRTC connection looks alive.
+          // Signal disconnect so VideoFeedCard auto-reconnect kicks in.
+          console.warn("[webrtc-client] Frame timeout — no frames for 8s, signaling disconnect");
+          store.setStreaming(false);
+          store.updateStats(0, 0);
+          stopStatsPolling();
+        }
       }
     });
   }, 1000);

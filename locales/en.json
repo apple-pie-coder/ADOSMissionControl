@@ -5,7 +5,7 @@
     "simulate": "Simulate",
     "command": "Command",
     "configure": "Configure",
-    "airTraffic": "Air Traffic",
+    "airTraffic": "Airspace",
     "history": "History",
     "community": "Community"
   },
@@ -15,14 +15,51 @@
       "continue": "Continue"
     },
     "intro": {
-      "tagline": "A ground control station built for the open-source drone community.",
-      "description": "Connect to any ArduPilot, PX4, or Betaflight drone. Configure, plan missions, and fly — all from your browser.",
+      "tagline": "Ground control for software-defined drones.",
+      "description": "Configure, plan missions, and fly any ArduPilot, PX4, or Betaflight drone. Pair with ADOS Drone Agent to run intelligence at the edge. Open source. Runs in your browser.",
       "openBeta": "Open Beta",
       "freeForever": "Free Forever",
       "openSource": "GPL-3.0 Open Source",
       "getStarted": "Get Started",
       "privacy": "Your data stays on this device.",
       "privacyDetail": "We don't collect or track anything."
+    },
+    "disclaimer": {
+      "title": "Before You Fly",
+      "subtitle": "ADOS Mission Control can control real aircraft. Please read and accept the following.",
+      "lawfulUse": {
+        "heading": "Lawful Use Only",
+        "body": "You agree to use this software only for lawful purposes. You will not use it to conduct surveillance, harass individuals, violate privacy, or support any activity prohibited by law in your country or region."
+      },
+      "militaryUse": {
+        "heading": "No Unauthorized Military Use",
+        "body": "This software must not be used for offensive military or defense operations without explicit authorization from the relevant government authority. Unauthorized weaponization of drones is illegal in virtually every jurisdiction."
+      },
+      "aviationRegs": {
+        "heading": "Aviation Regulations",
+        "body": "You are solely responsible for complying with all aviation regulations that apply to your location and operation. This includes, but is not limited to:",
+        "item1": "Registering your drone with the appropriate authority (DGCA, FAA, CASA, EASA, etc.)",
+        "item2": "Obtaining required pilot certifications or licenses",
+        "item3": "Securing airspace authorizations before flight",
+        "item4": "Operating within altitude, distance, and visual-line-of-sight limits",
+        "footer": "This software does not guarantee regulatory compliance. It is a tool. You are the pilot in command."
+      },
+      "exportControls": {
+        "heading": "Export Controls",
+        "body": "Drone control software may be subject to export control laws including ITAR (US), EAR (US), EU Dual-Use Regulation, and India's SCOMET list. You are responsible for ensuring that your use, distribution, or modification of this software complies with applicable export control and sanctions laws."
+      },
+      "noWarranty": {
+        "heading": "No Warranty & Assumption of Risk",
+        "warranty": "This software is provided \"as is\", without warranty of any kind, express or implied. This includes, but is not limited to, warranties of merchantability, fitness for a particular purpose, and non-infringement.",
+        "risk": "Drones are physical machines that can cause property damage, injury, or death if operated improperly or if software malfunctions. By using this software, you assume all risk associated with its use. Altnautica and its contributors shall not be liable for any claim, damage, or loss arising from the use of this software, whether direct, indirect, incidental, or consequential."
+      },
+      "openSource": {
+        "heading": "Open Source License",
+        "body": "ADOS Mission Control is licensed under the GNU General Public License v3.0. You are free to use, modify, and distribute this software under the terms of that license.",
+        "link": "Read the full GPL-3.0 license"
+      },
+      "acceptCheckbox": "I have read and accept the terms above. I understand that I am the pilot in command and assume all responsibility for safe and lawful operation.",
+      "acceptButton": "Accept & Continue"
     },
     "preferences": {
       "title": "Set your preferences",
@@ -40,16 +77,79 @@
       "locationGranted": "Location access granted",
       "locationDenied": "Permission denied — enable in browser settings or configure later"
     },
+    "theme": {
+      "title": "Choose your theme",
+      "subtitle": "You can change this anytime in settings",
+      "themeLibrary": "Theme library",
+      "visibleCount": "{count} visible",
+      "groupTabs": {
+        "all": "All",
+        "dark": "Dark",
+        "light": "Light",
+        "mid": "Mid-tone"
+      },
+      "preview": "Preview",
+      "tapToSwap": "Tap any tile to swap with preview",
+      "accentColor": "Accent color",
+      "accentColors": {
+        "blue": "Blue",
+        "green": "Green",
+        "amber": "Amber",
+        "red": "Red",
+        "lime": "Lime",
+        "purple": "Purple",
+        "pink": "Pink",
+        "cyan": "Cyan",
+        "orange": "Orange"
+      },
+      "useAsPreviewAria": "Use {name} as preview",
+      "setAccentColorAria": "Set accent color to {color}",
+      "workspace": {
+        "menu": {
+          "flight": "Flight"
+        },
+        "flightOverview": "Flight Overview",
+        "live": "LIVE",
+        "telemetry": {
+          "alt": "Alt",
+          "speed": "Speed"
+        },
+        "missionStatus": "Mission Status",
+        "missionStatusSample": "5 waypoints loaded. Ready to arm and start mission.",
+        "armVehicle": "Arm Vehicle",
+        "openPlanner": "Open Planner"
+      }
+    },
+    "download": {
+      "title": "Desktop App Available",
+      "description": "The desktop app works offline with zero external dependencies. Your data stays on your machine, nothing phones home. Desktop releases follow a weekly update cycle and may trail the web version by a release or two.",
+      "macos": "macOS",
+      "appleSilicon": "Apple Silicon",
+      "intel": "Intel",
+      "windows": "Windows",
+      "linux": "Linux",
+      "download": "Download",
+      "continue": "I understand, continue",
+      "skip": "Skip for now",
+      "releasesNote": "Downloads from GitHub Releases"
+    },
     "ready": {
-      "title": "You're all set.",
+      "title": "You're good to go.",
       "openApp": "Open Mission Control",
-      "joinDiscord": "Join pilots on Discord",
-      "starGitHub": "Star us on GitHub"
+      "communityHeading": "Built in the open",
+      "communityDescription": "ADOS Mission Control is free, open-source, and community-driven. We build this in public and every contribution matters.",
+      "discordHeading": "Talk to us",
+      "discordDescription": "Ask questions, share your setup, report bugs, or just hang out with other pilots and developers.",
+      "joinDiscord": "Join the Discord",
+      "githubHeading": "Help the project grow",
+      "githubDescription": "A star on GitHub helps more people find this project. It takes two seconds and makes a real difference.",
+      "starGitHub": "Star on GitHub"
     },
     "steps": {
       "language": "Language",
       "welcome": "Welcome",
       "preferences": "Preferences",
+      "download": "Desktop App",
       "ready": "Ready"
     }
   },
@@ -63,7 +163,17 @@
     "retry": "Retry",
     "loading": "Loading...",
     "error": "Error",
-    "close": "Close"
+    "close": "Close",
+    "localStorageBanner": {
+      "warning": "Your data is saved in this browser only. Clearing browser data will erase it.",
+      "signInToBackup": "Sign in to back up"
+    },
+    "unsavedChangesDialog": {
+      "title": "Unsaved Changes",
+      "message": "You have unsaved changes to the current plan. What would you like to do?",
+      "saveAndSwitch": "Save & Switch",
+      "discardAndSwitch": "Discard & Switch"
+    }
   },
   "status": {
     "connected": "Connected",
@@ -83,7 +193,29 @@
     "noAccount": "No account yet?",
     "createAccount": "Create account",
     "haveAccount": "Already have an account?",
-    "name": "Full name"
+    "name": "Full name",
+    "cloudNotAvailable": "Cloud Not Available",
+    "cloudRequiresConvex": "Sign-in requires a Convex backend. Set NEXT_PUBLIC_CONVEX_URL in your environment to enable cloud features.",
+    "continueLocalMode": "Continue in local mode",
+    "signInSyncDescription": "Sign in to sync your missions across devices.",
+    "createAccountBackupDescription": "Create an account to back up your data to the cloud.",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••",
+    "alreadyHaveAccountSignIn": "Already have an account? Sign in",
+    "continueWithoutAccount": "Continue without account",
+    "toAction": "to {action}",
+    "actions": {
+      "comment": "comment",
+      "continue": "continue"
+    },
+    "errors": {
+      "incorrectPassword": "Incorrect password. Please try again.",
+      "noAccountFound": "No account found with this email.",
+      "tooManyAttempts": "Too many failed attempts. Try again later.",
+      "accountExists": "An account with this email already exists.",
+      "generic": "Something went wrong. Please try again."
+    }
   },
   "settings": {
     "language": "Language",
@@ -123,7 +255,13 @@
       "githubDark": "GitHub Dark",
       "ayuDark": "Ayu Dark",
       "ayuMirage": "Ayu Mirage",
-      "everforestDark": "Everforest Dark"
+      "everforestDark": "Everforest Dark",
+      "groupCore": "Core",
+      "groupSolarized": "Solarized",
+      "groupDarkThemes": "Dark Themes",
+      "groupLightThemes": "Light Themes",
+      "groupMidTone": "Mid-tone",
+      "selectTheme": "Select Theme"
     }
   },
   "guidance": {
@@ -161,7 +299,23 @@
     "cancelled": "Cancelled",
     "addTranslation": "Add Translation",
     "translations": "Translations",
-    "noTranslation": "No translation available for this language"
+    "noTranslation": "No translation available for this language",
+    "badges": {
+      "categories": {
+        "command": "Command",
+        "ados": "ADOS",
+        "website": "Website",
+        "general": "General"
+      },
+      "statuses": {
+        "backlog": "Backlog",
+        "in_discussion": "In Discussion",
+        "planned": "Planned",
+        "in_progress": "In Progress",
+        "released": "Released",
+        "wont_do": "Won't Do"
+      }
+    }
   },
   "shell": {
     "missionControl": "Mission Control",
@@ -216,7 +370,18 @@
     "geoUnavailable": "Geolocation not available in this browser.",
     "setupWizard": "Re-run Setup Wizard",
     "setupWizardDesc": "Re-run the initial configuration wizard",
-    "rerun": "Re-run"
+    "rerun": "Re-run",
+    "timezoneIst": "IST (UTC+5:30)",
+    "timezoneUtc": "UTC (UTC+0:00)",
+    "timezonePst": "PST (UTC-8:00)",
+    "telemetryRate1Hz": "1 Hz",
+    "telemetryRate5Hz": "5 Hz",
+    "telemetryRate10Hz": "10 Hz",
+    "telemetryRate20Hz": "20 Hz",
+    "latAbbr": "LAT",
+    "lonAbbr": "LON",
+    "accAbbr": "ACC",
+    "altAbbr": "ALT"
   },
   "notifications": {
     "title": "Notifications",
@@ -300,7 +465,13 @@
     "gps": "GPS",
     "armedStatus": "Armed status",
     "signal": "Signal",
-    "timer": "Timer"
+    "timer": "Timer",
+    "bitrate2Mbps": "2 Mbps",
+    "bitrate4Mbps": "4 Mbps",
+    "bitrate8Mbps": "8 Mbps",
+    "bitrate12Mbps": "12 Mbps",
+    "codecH264": "H.264",
+    "codecH265": "H.265"
   },
   "inputDevices": {
     "title": "Input Devices",
@@ -336,8 +507,6 @@
   },
   "communityNav": {
     "changelog": "Changelog",
-    "kanban": "Kanban",
-    "roadmap": "Roadmap",
     "contact": "Contact",
     "unavailableTitle": "Community data (changelog, roadmap, contact) is live on the hosted version at",
     "unavailableSetup": "Disabled by default in local builds. To run your own internal community board, set up a Convex backend and configure",
@@ -364,19 +533,56 @@
     "errorAuth": "Please sign in to send a message.",
     "errorGeneral": "Failed to send message. Please try again."
   },
-  "roadmap": {
-    "title": "Roadmap",
-    "planned": "Planned",
-    "inProgress": "In Progress",
-    "released": "Released",
-    "nothingHere": "Nothing here yet.",
-    "loadingRoadmap": "Loading roadmap..."
-  },
   "dashboard": {
     "logs": "Logs",
     "flightLogs": "Flight Logs",
     "expandLogs": "Expand logs panel",
-    "collapseLogs": "Collapse logs panel"
+    "collapseLogs": "Collapse logs panel",
+    "quickActions": "Quick Actions",
+    "fleetStatus": {
+      "title": "Fleet Status",
+      "totalDrones": "Total Drones",
+      "statuses": {
+        "online": "Online",
+        "inMission": "In Mission",
+        "idle": "Idle",
+        "returning": "Returning",
+        "maintenance": "Maintenance",
+        "offline": "Offline"
+      }
+    },
+    "activeMissions": {
+      "title": "Active Missions",
+      "inFlight": "In Flight",
+      "suites": {
+        "sentry": "Sentry",
+        "survey": "Survey",
+        "agriculture": "Agriculture",
+        "cargo": "Cargo",
+        "sar": "SAR",
+        "inspection": "Inspection"
+      },
+      "noActiveMissions": "No active missions"
+    },
+    "alerts": {
+      "title": "Alerts",
+      "unacknowledged": "Unacknowledged",
+      "levels": {
+        "critical": "Critical",
+        "warning": "Warning"
+      }
+    },
+    "avgBattery": {
+      "title": "Fleet Battery",
+      "average": "Average",
+      "lowCount": "{count} low",
+      "reportingCount": "{count} reporting",
+      "lowestLabel": "Lowest: {name}"
+    },
+    "alertFeed": {
+      "title": "Recent Alerts",
+      "noAlerts": "No alerts"
+    }
   },
   "emptyState": {
     "title": "No Drones Connected",
@@ -405,7 +611,13 @@
     "goToFirmware": "Go to Firmware",
     "webSerialNotSupported": "Web Serial not supported in this browser. Use Chrome or Edge.",
     "noUsbInfo": "No USB info available",
-    "portsAvailable": "{count} permitted port(s) available"
+    "portsAvailable": "{count} permitted port(s) available",
+    "noActiveConnectionsHelp": "No active connections. Connect a flight controller above.",
+    "activeBadge": "ACTIVE",
+    "buildPreset": {
+      "details": "details",
+      "noGps": "No GPS"
+    }
   },
   "droneDetail": {
     "overview": "Overview",
@@ -458,7 +670,29 @@
     "frame": "Frame",
     "firmware": "Firmware",
     "compute": "Compute",
-    "weight": "Weight"
+    "weight": "Weight",
+    "suiteDashboard": {
+      "dashboardTitle": "{suite} Dashboard",
+      "mission": "Mission Planner",
+      "patrolProgress": "Patrol Progress",
+      "coverage": "Coverage",
+      "gridProgress": "Grid Progress",
+      "missionProgress": "Mission Progress",
+      "areaCovered": "Area Covered",
+      "laps": "Laps",
+      "detections": "Detections",
+      "alerts": "Alerts",
+      "images": "Images",
+      "overlap": "Overlap",
+      "gsd": "GSD",
+      "area": "Area",
+      "searchArea": "Search Area",
+      "personsFound": "Persons Found",
+      "gridCells": "Grid Cells",
+      "thermalHits": "Thermal Hits",
+      "waypoints": "Waypoints",
+      "distance": "Distance"
+    }
   },
   "logs": {
     "debug": "DEBUG",
@@ -485,7 +719,12 @@
     "severity": "SEVERITY",
     "message": "MESSAGE",
     "waitingForMessages": "Waiting for status messages...",
-    "noMessagesMatch": "No messages match current filters"
+    "noMessagesMatch": "No messages match current filters",
+    "externalAnalysis": {
+      "title": "External Analysis",
+      "plotterDescription": "Interactive DataFlash / .tlog graph plotter",
+      "reviewerDescription": "Automated log analysis and flight review"
+    }
   },
   "fcNav": {
     "flightController": "FLIGHT CONTROLLER",
@@ -1245,7 +1484,7 @@
     "moreActions": "More actions"
   },
   "airTraffic": {
-    "title": "Air Traffic",
+    "title": "Airspace",
     "layers": "Layers",
     "aircraft": "Aircraft",
     "airspaceZones": "Airspace Zones",
@@ -1522,7 +1761,21 @@
     "no": "No",
     "signal": "Signal",
     "rssi": "RSSI",
-    "latency": "Latency"
+    "latency": "Latency",
+    "telemetryNone": "No Data",
+    "telemetryChannels": {
+      "attitude": "Attitude",
+      "position": "Position",
+      "battery": "Battery",
+      "gps": "GPS",
+      "rcInput": "RC Input",
+      "radio": "Radio",
+      "vfrHud": "VFR HUD",
+      "systemStatus": "System Status",
+      "ekf": "EKF",
+      "wind": "Wind",
+      "navController": "Nav Controller"
+    }
   },
   "flightInfo": {
     "vehicleInfo": "Vehicle Info",
@@ -1695,7 +1948,38 @@
     "searchDrones": "Search drones...",
     "noMatch": "No drones match search",
     "noDrones": "No drones",
-    "droneCount": "{count} drone{count, plural, one {} other {s}}"
+    "droneCount": "{count} drone{count, plural, one {} other {s}}",
+    "toolbar": {
+      "status": {
+        "all": "All Status",
+        "online": "Online",
+        "inMission": "In Mission",
+        "idle": "Idle",
+        "returning": "Returning",
+        "maintenance": "Maintenance",
+        "offline": "Offline"
+      },
+      "suite": {
+        "all": "All Suites",
+        "sentry": "Sentry",
+        "survey": "Survey",
+        "agriculture": "Agriculture",
+        "cargo": "Cargo",
+        "sar": "SAR",
+        "inspection": "Inspection"
+      },
+      "sort": {
+        "name": "Sort: Name",
+        "status": "Sort: Status",
+        "battery": "Sort: Battery",
+        "health": "Sort: Health"
+      },
+      "view": {
+        "grid": "Grid",
+        "list": "List",
+        "map": "Map"
+      }
+    }
   },
   "commandPalette": {
     "placeholder": "Type a command...",

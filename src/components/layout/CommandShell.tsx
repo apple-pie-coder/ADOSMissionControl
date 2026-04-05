@@ -9,9 +9,6 @@ import { DemoProvider } from "./DemoProvider";
 import { CommandPalette } from "@/components/shared/command-palette";
 import { FailsafeAlertBanner } from "@/components/flight/FailsafeAlertBanner";
 import { useFleetStore } from "@/stores/fleet-store";
-import { useDroneStore } from "@/stores/drone-store";
-import { useVideoStore } from "@/stores/video-store";
-import { useDroneManager } from "@/stores/drone-manager";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { LocalStorageBanner } from "@/components/ui/local-storage-banner";
@@ -19,7 +16,7 @@ import { useUiStore } from "@/stores/ui-store";
 import { SignInModal } from "@/components/auth/SignInModal";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { ConnectDialog } from "@/components/connect/ConnectDialog";
-import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { WelcomeModal, DisclaimerGate } from "@/components/onboarding/WelcomeModal";
 import { formatSyncTime } from "@/lib/sync";
 import { useAutoReconnect } from "@/hooks/use-auto-reconnect";
 import { useGcsLocation } from "@/hooks/use-gcs-location";
@@ -27,6 +24,7 @@ import { usePlatform } from "@/hooks/use-platform";
 import { useDisconnectGuard } from "@/hooks/use-disconnect-guard";
 import { DisconnectGuard } from "@/components/fc/shared/DisconnectGuard";
 import dynamic from "next/dynamic";
+import { useConvexAvailable } from "@/app/ConvexClientProvider";
 import { cn, isBattleNet } from "@/lib/utils";
 
 // Defense overlay — only resolved in BattleNet builds; tree-shaken in community builds.
@@ -41,11 +39,62 @@ import { ChangelogNotificationGate } from "@/components/changelog/ChangelogNotif
 import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
 import Link from "next/link";
 
+// MAVLink bridge persists across all tabs — direct import (renders null, no hydration issue)
+import { AgentMavlinkBridge } from "@/components/command/AgentMavlinkBridge";
+
+/**
+ * User menu with sign-out. Must only mount when ConvexAuthNextjsProvider exists
+ * (i.e., when convexAvailable is true), because useAuthActions requires that context.
+ */
+function ConvexUserMenu() {
+  const { signOut } = useAuthActions();
+  const user = useAuthStore((s) => s.user);
+  const lastSyncedAt = useAuthStore((s) => s.lastSyncedAt);
+  const t = useTranslations("shell");
+  const tAuth = useTranslations("auth");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <Tooltip content={user?.email || t("account")} position="bottom">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="w-6 h-6 rounded-full bg-accent-primary/20 text-accent-primary flex items-center justify-center text-[10px] font-semibold uppercase"
+        >
+          {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+        </button>
+      </Tooltip>
+      {menuOpen && (
+        <div className="absolute right-0 top-8 bg-bg-secondary border border-border-default shadow-lg z-50 w-48 py-1">
+          <div className="px-3 py-2 border-b border-border-default">
+            <p className="text-xs text-text-primary font-medium truncate">{user?.name || user?.email}</p>
+            <p className="text-[10px] text-text-tertiary truncate">{user?.email}</p>
+            {lastSyncedAt && (
+              <p className="text-[10px] text-text-tertiary mt-1">
+                {t("lastSynced", { time: formatSyncTime(lastSyncedAt) })}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              if (signOut) void signOut();
+            }}
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-bg-primary transition-colors"
+          >
+            <LogOut size={12} />
+            {tAuth("signOut")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CommandShell({ children }: { children: React.ReactNode }) {
   useAutoReconnect();
   useGcsLocation();
   const t = useTranslations("shell");
-  const tAuth = useTranslations("auth");
   const { isElectron, isMac, isWindows, isLinux } = usePlatform();
   const {
     guardOpen,
@@ -67,19 +116,12 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
   const demo = useSettingsStore((s) => s.demoMode);
   const setDemoMode = useSettingsStore((s) => s.setDemoMode);
   const alertCount = useFleetStore((s) => s.alerts.filter((a) => !a.acknowledged).length);
-  const mavConnected = useDroneManager((s) => s.selectedDroneId !== null);
-  const videoStreaming = useVideoStore((s) => s.isStreaming);
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const user = useAuthStore((s) => s.user);
-  const syncStatus = useAuthStore((s) => s.syncStatus);
-  const lastSyncedAt = useAuthStore((s) => s.lastSyncedAt);
-  const authActions = useAuthActions();
-  const signOut = authActions?.signOut;
+  const convexAvailable = useConvexAvailable();
   const immersiveMode = useUiStore((s) => s.immersiveMode);
   const exitImmersiveMode = useUiStore((s) => s.exitImmersiveMode);
   const [signInOpen, setSignInOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Listen for sign-in requests from AuthGate and other components
   useEffect(() => {
@@ -102,6 +144,9 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col h-dvh">
       {/* Welcome onboarding modal */}
       <WelcomeModal />
+
+      {/* Disclaimer gate for existing users who haven't accepted yet */}
+      <DisclaimerGate />
 
       {/* Changelog "What's New" notification modal */}
       <ChangelogNotificationGate />
@@ -146,33 +191,12 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Center — Navigation */}
-        <div className={cn(isElectron && !isLinux && "[-webkit-app-region:no-drag]")}>
+        <div className={cn("self-stretch flex", isElectron && !isLinux && "[-webkit-app-region:no-drag]")}>
           <CommandNav />
         </div>
 
         {/* Right — Status indicators */}
         <div className={cn("flex items-center gap-3", isElectron && !isLinux && "[-webkit-app-region:no-drag]")}>
-          {/* Connection dots: MAVLink / Video / MQTT */}
-          <Tooltip content={t("connectionStatus")} position="bottom">
-            <div className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${mavConnected ? "bg-status-success" : "bg-text-tertiary"}`} />
-              <span className={`w-2 h-2 rounded-full ${videoStreaming ? "bg-status-success" : "bg-text-tertiary"}`} />
-              <span className="w-2 h-2 rounded-full bg-text-tertiary" />
-
-              {/* Sync status dot — only when signed in */}
-              {isAuthenticated && (
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    syncStatus === "synced" ? "bg-status-success" :
-                    syncStatus === "syncing" ? "bg-status-warning animate-pulse" :
-                    syncStatus === "error" ? "bg-status-error" :
-                    "bg-text-tertiary"
-                  }`}
-                />
-              )}
-            </div>
-          </Tooltip>
-
           {/* Alert count */}
           {alertCount > 0 && (
             <Tooltip content={t("unacknowledgedAlerts")} position="bottom">
@@ -180,53 +204,6 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
                 <AlertTriangle size={12} />
                 <span className="text-xs font-mono tabular-nums">{alertCount}</span>
               </div>
-            </Tooltip>
-          )}
-
-          {/* Auth — sign in or user menu */}
-          {isAuthenticated ? (
-            <div className="relative">
-              <Tooltip content={user?.email || t("account")} position="bottom">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="w-6 h-6 rounded-full bg-accent-primary/20 text-accent-primary flex items-center justify-center text-[10px] font-semibold uppercase"
-                >
-                  {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
-                </button>
-              </Tooltip>
-              {userMenuOpen && (
-                <div className="absolute right-0 top-8 bg-bg-secondary border border-border-default shadow-lg z-50 w-48 py-1">
-                  <div className="px-3 py-2 border-b border-border-default">
-                    <p className="text-xs text-text-primary font-medium truncate">{user?.name || user?.email}</p>
-                    <p className="text-[10px] text-text-tertiary truncate">{user?.email}</p>
-                    {lastSyncedAt && (
-                      <p className="text-[10px] text-text-tertiary mt-1">
-                        {t("lastSynced", { time: formatSyncTime(lastSyncedAt) })}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      if (signOut) void signOut();
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-bg-primary transition-colors"
-                  >
-                    <LogOut size={12} />
-                    {tAuth("signOut")}
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Tooltip content={t("signInForSync")} position="bottom">
-              <button
-                onClick={() => setSignInOpen(true)}
-                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-text-secondary transition-colors"
-              >
-                <CloudOff size={10} />
-                <span className="hidden sm:inline">{t("localOnly")}</span>
-              </button>
             </Tooltip>
           )}
 
@@ -249,7 +226,7 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
               className="text-text-secondary hover:text-text-primary transition-colors"
               aria-label={t("joinDiscord")}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
             </a>
           </Tooltip>
 
@@ -288,6 +265,21 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
               <Settings size={16} />
             </Link>
           </Tooltip>
+
+          {/* Auth — sign in or user menu (far right) */}
+          {isAuthenticated && convexAvailable ? (
+            <ConvexUserMenu />
+          ) : (
+            <Tooltip content={t("signInForSync")} position="bottom">
+              <button
+                onClick={() => setSignInOpen(true)}
+                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-text-secondary transition-colors"
+              >
+                <CloudOff size={10} />
+                <span className="hidden sm:inline">{t("localOnly")}</span>
+              </button>
+            </Tooltip>
+          )}
         </div>
       </header>}
 
@@ -315,6 +307,7 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
         <CommandPalette />
         <FailsafeAlertBanner />
         {children}
+        <AgentMavlinkBridge />
       </main>
     </div>
   );

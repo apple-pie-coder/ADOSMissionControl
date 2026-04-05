@@ -51,9 +51,8 @@ export const communityApi = {
     checkAndRecord: api.cmdAiUsage.checkAndRecord,
     getRemaining: api.cmdAiUsage.getRemaining,
   },
-  adsbCache: {
-    getAll: api.cmdAdsbCacheMutations.getAll,
-    getByRegion: api.cmdAdsbCacheMutations.getByRegion,
-    getRegionList: api.cmdAdsbCacheMutations.getRegionList,
+  airspaceZones: {
+    getByJurisdiction: api.cmdAirspaceZones.getByJurisdiction,
+    getAll: api.cmdAirspaceZones.getAllZones,
   },
 };

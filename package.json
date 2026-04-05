@@ -1,6 +1,6 @@
 {
   "name": "altnautica-command",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "private": false,
   "license": "GPL-3.0-only",
   "description": "Altnautica Command — Open-source Ground Control Station for autonomous drones",
@@ -31,6 +31,7 @@
     "convex:deploy": "npx convex deploy"
   },
   "dependencies": {
+    "@blockly/theme-dark": "^8.0.3",
     "@convex-dev/auth": "^0.0.90",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
@@ -39,6 +40,8 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@tanstack/react-virtual": "^3.13.22",
+    "@xyflow/react": "^12.10.2",
+    "blockly": "^12.5.1",
     "cesium": "^1.138.0",
     "convex": "^1.32.0",
     "electron-updater": "^6.0.0",

@@ -17,6 +17,10 @@ import { CpuSparkline } from "./shared/CpuSparkline";
 import { MemorySparkline } from "./shared/MemorySparkline";
 import { LogViewer } from "./shared/LogViewer";
 import { AgentDisconnectedPage } from "./AgentDisconnectedPage";
+import { VideoFeedCard } from "./shared/VideoFeedCard";
+import { BatteryCard } from "./shared/BatteryCard";
+import { RcInputCard } from "./shared/RcInputCard";
+import { FlightDataCard } from "./shared/FlightDataCard";
 
 export function AgentOverviewTab() {
   const t = useTranslations("agent");
@@ -55,24 +59,40 @@ export function AgentOverviewTab() {
   }
 
   return (
-    <div className="p-4 space-y-4 max-w-5xl">
-      <AgentStatusCard status={status} />
+    <div className="p-4 space-y-4">
+      {/* Agent Status spans 2/3, Flight Telemetry column starts at top */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        {/* Status card spans 2 columns */}
+        <div className="xl:col-span-2">
+          {status && <AgentStatusCard status={status} />}
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ServiceTable
-          services={services}
-          onRestart={restartService}
-          processCpu={processCpu}
-          processMemoryMb={processMemMb}
-        />
+        {/* Column 3: Video + Flight Telemetry (starts at same level as status) */}
+        <div className="xl:row-span-3 space-y-3">
+          <VideoFeedCard />
+          <FlightDataCard />
+          <RcInputCard />
+        </div>
+
+        {/* Below status: 2 columns — logs+services left, resources right */}
+        <div className="space-y-4">
+          <LogViewer logs={logs} onRefresh={fetchLogs} />
+          <ServiceTable
+            services={services}
+            onRestart={restartService}
+            onRestartAll={() => restartService("ados-supervisor")}
+            processCpu={processCpu}
+            processMemoryMb={processMemMb}
+          />
+        </div>
+
         <div className="space-y-4">
           {resources && <SystemResourceGauges resources={resources} />}
           <CpuSparkline />
           <MemorySparkline />
+          <BatteryCard />
         </div>
       </div>
-
-      <LogViewer logs={logs} onRefresh={fetchLogs} />
     </div>
   );
 }

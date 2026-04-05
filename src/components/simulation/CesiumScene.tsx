@@ -27,10 +27,10 @@ import {
   SceneMode,
   ImageryLayer,
   UrlTemplateImageryProvider,
+  Credit,
   Color,
   Cesium3DTileset,
   Cesium3DTileStyle,
-  IonImageryProvider,
   type Viewer as CesiumViewer,
 } from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
@@ -68,6 +68,8 @@ export default function CesiumScene({
   buildingsEnabled = false,
   terrainExaggeration = 1,
 }: CesiumSceneProps) {
+  // Fall back to env var if Convex hasn't returned a token yet
+  const effectiveToken = cesiumToken ?? process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<CesiumViewer | null>(null);
   const tilesetRef = useRef<Cesium3DTileset | null>(null);
@@ -156,9 +158,9 @@ export default function CesiumScene({
   // Effect 2: Token update — upgrade terrain to Cesium World Terrain without recreating viewer
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer || viewer.isDestroyed() || !cesiumToken) return;
+    if (!viewer || viewer.isDestroyed() || !effectiveToken) return;
 
-    Ion.defaultAccessToken = cesiumToken;
+    Ion.defaultAccessToken = effectiveToken;
     viewer.scene.setTerrain(
       Terrain.fromWorldTerrain({
         requestVertexNormals: true,
@@ -166,7 +168,7 @@ export default function CesiumScene({
       })
     );
     viewer.scene.requestRender();
-  }, [cesiumToken]);
+  }, [effectiveToken]);
 
   // Effect 3: Imagery switching with cross-fade
   useEffect(() => {
@@ -175,48 +177,58 @@ export default function CesiumScene({
 
     let cancelled = false;
     let rafId: number | undefined;
+    let layerRef: ImageryLayer | null = null;
 
-    // Create layer synchronously via fromProviderAsync (handles async loading internally)
-    const newLayer =
-      imageryMode === "satellite"
-        ? ImageryLayer.fromProviderAsync(IonImageryProvider.fromAssetId(2))
-        : createDarkCartoLayer();
-
-    // Add new layer at alpha 0
-    newLayer.alpha = 0;
-    viewer.imageryLayers.add(newLayer);
-
-    // Cross-fade over 300ms
-    const startTime = performance.now();
-    const duration = 300;
-
-    function animate(now: number) {
+    function crossFade(newLayer: ImageryLayer) {
       if (cancelled || !viewer || viewer.isDestroyed()) return;
-      const progress = Math.min((now - startTime) / duration, 1);
-      newLayer.alpha = progress;
-      viewer.scene.requestRender();
+      layerRef = newLayer;
+      newLayer.alpha = 0;
+      viewer.imageryLayers.add(newLayer);
 
-      if (progress < 1) {
-        rafId = requestAnimationFrame(animate);
-      } else {
-        // Remove all old layers (everything except the new one)
-        while (viewer.imageryLayers.length > 1) {
-          viewer.imageryLayers.remove(viewer.imageryLayers.get(0));
+      const startTime = performance.now();
+      const duration = 300;
+
+      function animate(now: number) {
+        if (cancelled || !viewer || viewer.isDestroyed()) return;
+        const progress = Math.min((now - startTime) / duration, 1);
+        newLayer.alpha = progress;
+        viewer.scene.requestRender();
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(animate);
+        } else {
+          // Remove all old layers (everything except the new one)
+          while (viewer.imageryLayers.length > 1) {
+            viewer.imageryLayers.remove(viewer.imageryLayers.get(0));
+          }
         }
       }
+
+      rafId = requestAnimationFrame(animate);
     }
 
-    rafId = requestAnimationFrame(animate);
+    if (imageryMode === "satellite") {
+      // Esri World Imagery — free, no token needed, same provider as Leaflet maps
+      const esriLayer = new ImageryLayer(
+        new UrlTemplateImageryProvider({
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          credit: new Credit("Esri, Maxar, Earthstar Geographics"),
+          maximumLevel: 18,
+        })
+      );
+      crossFade(esriLayer);
+    } else {
+      crossFade(createDarkCartoLayer());
+    }
 
     return () => {
       cancelled = true;
       if (rafId !== undefined) cancelAnimationFrame(rafId);
-      // Remove the new layer if animation didn't finish (rapid toggle cleanup)
-      if (viewer && !viewer.isDestroyed()) {
-        try { viewer.imageryLayers.remove(newLayer); } catch { /* already removed */ }
+      if (viewer && !viewer.isDestroyed() && layerRef) {
+        try { viewer.imageryLayers.remove(layerRef); } catch { /* already removed */ }
       }
     };
-  }, [imageryMode]);
+  }, [imageryMode, effectiveToken]);
 
   // Effect 4: Buildings toggle (imagery-mode-aware styling)
   useEffect(() => {
@@ -231,7 +243,8 @@ export default function CesiumScene({
       tilesetRef.current = null;
     }
 
-    if (buildingsEnabled) {
+    if (buildingsEnabled && effectiveToken) {
+      Ion.defaultAccessToken = effectiveToken;
       const buildingColor =
         imageryMode === "satellite"
           ? "color('rgba(200, 210, 230, 0.85)')"
@@ -259,7 +272,7 @@ export default function CesiumScene({
         tilesetRef.current = null;
       }
     };
-  }, [buildingsEnabled, imageryMode]);
+  }, [buildingsEnabled, imageryMode, effectiveToken]);
 
   // Effect 5: Terrain exaggeration
   useEffect(() => {

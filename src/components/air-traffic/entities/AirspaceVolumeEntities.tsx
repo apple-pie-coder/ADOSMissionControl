@@ -8,7 +8,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Cartesian3, Color, DistanceDisplayCondition, PolygonHierarchy, type Viewer as CesiumViewer, type Entity as CesiumEntity } from "cesium";
+import { Cartesian3, Color, PolygonHierarchy, type Viewer as CesiumViewer, type Entity as CesiumEntity } from "cesium";
 import { useAirspaceStore } from "@/stores/airspace-store";
 import { ZONE_COLORS, type AirspaceZoneType, type GeoJSONPolygon, type GeoJSONMultiPolygon } from "@/lib/airspace/types";
 
@@ -61,14 +61,37 @@ export function AirspaceVolumeEntities({ viewer }: AirspaceVolumeEntitiesProps) 
 
     const visible = layerVisibility.airspace;
 
-    for (const zone of zones) {
-      if (zone.floorAltitude > operationalAltitude) continue;
-      if (zone.metadata?.generated === "icao-standard" && !showIcaoZones) continue;
-      if (zone.jurisdiction && !activeJurisdictions.has(zone.jurisdiction)) continue;
+    // Performance: sort to prioritize polygons over circles and restricted over advisory,
+    // then cap total entities to avoid CesiumJS performance degradation
+    const MAX_ENTITIES = 2500;
+    let entityCount = 0;
+
+    // Pre-filter and sort: polygons first (they have real boundaries), then by priority
+    const PRIORITY_TYPES = new Set(["restricted", "prohibited", "dgcaRed", "danger", "ctr", "tma"]);
+    const filtered = zones
+      .filter((z) => {
+        if (z.floorAltitude > operationalAltitude) return false;
+        if (z.metadata?.generated === "icao-standard" && !showIcaoZones) return false;
+        if (z.jurisdiction && !activeJurisdictions.has(z.jurisdiction)) return false;
+        if (!getVolumeColors(z.type)) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        // Polygons (real boundaries) before circles
+        const aIsPolygon = !a.circle ? 1 : 0;
+        const bIsPolygon = !b.circle ? 1 : 0;
+        if (aIsPolygon !== bIsPolygon) return bIsPolygon - aIsPolygon;
+        // Priority zone types first
+        const aPriority = PRIORITY_TYPES.has(a.type) ? 1 : 0;
+        const bPriority = PRIORITY_TYPES.has(b.type) ? 1 : 0;
+        return bPriority - aPriority;
+      });
+
+    for (const zone of filtered) {
+      if (entityCount >= MAX_ENTITIES) break;
       const colors = getVolumeColors(zone.type);
       if (!colors) continue;
 
-      const lodDistance = getZoneLodDistance(zone.type, zone.ceilingAltitude);
       const description = `<p><b>${zone.name}</b></p><p>Type: ${zone.type}</p><p>Floor: ${zone.floorAltitude}m / Ceiling: ${zone.ceilingAltitude}m</p><p>Authority: ${zone.authority}</p>`;
 
       if (zone.circle) {
@@ -89,16 +112,17 @@ export function AirspaceVolumeEntities({ viewer }: AirspaceVolumeEntitiesProps) 
             outline: true,
             outlineColor: colors.border,
             outlineWidth: 2,
-            distanceDisplayCondition: new DistanceDisplayCondition(0, lodDistance),
           },
           description,
         });
 
         entityMapRef.current.set(entityId, entity);
+        entityCount++;
       } else {
         const polygons = extractPolygons(zone.geometry);
 
         for (let i = 0; i < polygons.length; i++) {
+          if (entityCount >= MAX_ENTITIES) break;
           const ring = polygons[i];
           if (ring.length < 3) continue;
 
@@ -119,12 +143,12 @@ export function AirspaceVolumeEntities({ viewer }: AirspaceVolumeEntitiesProps) 
               outlineWidth: 2,
               closeTop: true,
               closeBottom: true,
-              distanceDisplayCondition: new DistanceDisplayCondition(0, lodDistance),
             },
             description,
           });
 
           entityMapRef.current.set(entityId, entity);
+          entityCount++;
         }
       }
     }
@@ -142,42 +166,6 @@ export function AirspaceVolumeEntities({ viewer }: AirspaceVolumeEntitiesProps) 
   }, [viewer, zones, operationalAltitude, showIcaoZones, activeJurisdictions, layerVisibility.airspace]);
 
   return null;
-}
-
-/** Returns max camera distance (meters) at which this zone type should be visible. */
-function getZoneLodDistance(type: string, _ceilingAlt: number): number {
-  switch (type) {
-    // Small zones (~5km radius): visible below 100km
-    case "dgcaRed":
-    case "casaRestricted":
-      return 100_000;
-    // Medium zones (~9-25km radius): visible below 250km
-    case "dgcaYellow":
-    case "classD":
-    case "casaCaution":
-    case "moa":
-      return 250_000;
-    // Large zones (~45-55km radius): visible below 500km
-    case "dgcaGreen":
-    case "classB":
-    case "classC":
-    case "classE":
-      return 500_000;
-    // Restrictions and TFRs: visible below 300km
-    case "restricted":
-    case "prohibited":
-    case "tfr":
-    case "ctr":
-    case "tma":
-      return 300_000;
-    // Danger/Alert/Warning: visible below 250km
-    case "danger":
-    case "alert":
-    case "warning":
-      return 250_000;
-    default:
-      return 300_000;
-  }
 }
 
 function extractPolygons(geometry: GeoJSONPolygon | GeoJSONMultiPolygon): number[][][] {

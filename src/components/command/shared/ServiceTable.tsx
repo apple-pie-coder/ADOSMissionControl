@@ -1,14 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { RotateCw } from "lucide-react";
+import { RotateCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/utils";
 import type { ServiceInfo } from "@/lib/agent/types";
+import { useVideoStore } from "@/stores/video-store";
 
 interface ServiceTableProps {
   services: ServiceInfo[];
   onRestart: (name: string) => void;
+  onRestartAll?: () => void;
   processCpu?: number | null;
   processMemoryMb?: number | null;
 }
@@ -41,8 +43,9 @@ const categoryColors: Record<string, string> = {
   ondemand: "text-text-tertiary",
 };
 
-export function ServiceTable({ services, onRestart, processCpu, processMemoryMb }: ServiceTableProps) {
+export function ServiceTable({ services, onRestart, onRestartAll, processCpu, processMemoryMb }: ServiceTableProps) {
   const t = useTranslations("agent");
+  const agentDependencies = useVideoStore((s) => s.agentDependencies);
   if (!services || !Array.isArray(services) || services.length === 0) {
     return (
       <div className="border border-border-default rounded-lg p-4">
@@ -62,6 +65,15 @@ export function ServiceTable({ services, onRestart, processCpu, processMemoryMb 
         <h3 className="text-sm font-medium text-text-primary">{t("services")}</h3>
         <div className="flex items-center gap-3 text-[10px] text-text-tertiary font-mono">
           <span>{runningCount}/{services.length} running</span>
+          {onRestartAll && (
+            <button
+              onClick={onRestartAll}
+              className="p-1 rounded hover:bg-white/10 text-text-tertiary hover:text-text-primary transition-colors"
+              title="Restart all services"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+          )}
           {processCpu != null && (
             <span>CPU {processCpu.toFixed(1)}%</span>
           )}
@@ -101,6 +113,22 @@ export function ServiceTable({ services, onRestart, processCpu, processMemoryMb 
                       </span>
                     )}
                     {svc.name}
+                    {svc.name === "ados-video" &&
+                      (svc.status === "error" || svc.status === "stopped") &&
+                      agentDependencies && (() => {
+                        const missing = Object.entries(agentDependencies)
+                          .filter(([, v]) => !v.found)
+                          .map(([k]) => k);
+                        if (missing.length === 0) return null;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-0.5 text-status-warning"
+                            title={`Missing: ${missing.join(", ")}`}
+                          >
+                            <AlertTriangle size={10} />
+                          </span>
+                        );
+                      })()}
                   </div>
                 </td>
                 <td className="py-1.5 pr-3">{statusBadge(svc.status)}</td>
@@ -110,10 +138,10 @@ export function ServiceTable({ services, onRestart, processCpu, processMemoryMb 
                       {svc.pid ?? "-"}
                     </td>
                     <td className="py-1.5 pr-3 text-right text-text-secondary font-mono">
-                      {svc.status === "running" ? svc.cpu_percent.toFixed(1) : "-"}
+                      {svc.status === "running" ? (svc.cpu_percent ?? 0).toFixed(1) : "-"}
                     </td>
                     <td className="py-1.5 pr-3 text-right text-text-secondary font-mono">
-                      {svc.status === "running" ? svc.memory_mb.toFixed(1) : "-"}
+                      {svc.status === "running" ? (svc.memory_mb ?? 0).toFixed(1) : "-"}
                     </td>
                   </>
                 )}
