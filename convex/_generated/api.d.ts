@@ -8,12 +8,11 @@
  * @module
  */
 
+import type * as airportData from "../airportData.js";
 import type * as auth from "../auth.js";
 import type * as changelogSync from "../changelogSync.js";
 import type * as changelogSyncMutations from "../changelogSyncMutations.js";
 import type * as clientConfig from "../clientConfig.js";
-import type * as cmdAdsbCache from "../cmdAdsbCache.js";
-import type * as cmdAdsbCacheMutations from "../cmdAdsbCacheMutations.js";
 import type * as cmdAiUsage from "../cmdAiUsage.js";
 import type * as cmdAirspaceZones from "../cmdAirspaceZones.js";
 import type * as cmdDroneCommands from "../cmdDroneCommands.js";
@@ -38,12 +37,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  airportData: typeof airportData;
   auth: typeof auth;
   changelogSync: typeof changelogSync;
   changelogSyncMutations: typeof changelogSyncMutations;
   clientConfig: typeof clientConfig;
-  cmdAdsbCache: typeof cmdAdsbCache;
-  cmdAdsbCacheMutations: typeof cmdAdsbCacheMutations;
   cmdAiUsage: typeof cmdAiUsage;
   cmdAirspaceZones: typeof cmdAirspaceZones;
   cmdDroneCommands: typeof cmdDroneCommands;
