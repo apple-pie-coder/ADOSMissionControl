@@ -18,6 +18,7 @@ import type {
   NetworkPeer,
   PairingInfo,
   ClaimResponse,
+  VideoStatus,
 } from "@/lib/agent/types";
 
 const jitter = (base: number, range: number) =>
@@ -552,6 +553,36 @@ export class MockAgentClient {
       battery_percent: Math.max(0, Math.min(100, Math.round(jitter(p.battery_percent, 2)))),
       distance_m: Math.max(0, Math.round(jitter(p.distance_m, 15))),
     }));
+  }
+
+  // ── Video ───────────────────────────────────────────────
+
+  async getVideoStatus(): Promise<VideoStatus | null> {
+    await delay(50);
+    return {
+      state: "running",
+      whep_url: "https://demo-video.altnautica.com/whep",
+      encoder: "h264_v4l2m2m",
+      cameras: {
+        cameras: [
+          {
+            name: "Pi Camera v3",
+            type: "csi",
+            device_path: "/dev/video0",
+            hardware_role: "primary",
+          },
+        ],
+        assignments: { primary: "Pi Camera v3" },
+      },
+      mediamtx: {
+        running: true,
+        webrtc_port: 8889,
+      },
+      dependencies: {
+        ffmpeg: { found: true, path: "/usr/bin/ffmpeg" },
+        gstreamer: { found: true, path: "/usr/bin/gst-launch-1.0" },
+      },
+    };
   }
 
   // ── Pairing ──────────────────────────────────────────────
